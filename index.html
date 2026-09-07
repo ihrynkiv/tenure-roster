@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tenure Roster</title>
+<meta name="description" content="A sorted roster showing how long each teammate has been on the project, longest-serving first.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #EEF0EA;
+    --surface: #FFFFFF;
+    --line: #D9DED3;
+    --ink: #1B2A2E;
+    --muted: #5B6B66;
+    --accent: #2F6F5E;
+    --accent-strong: #1F4D40;
+    --accent-soft: #DCE8E1;
+    --gold: #A6752E;
+    --gold-soft: #F1E4CE;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181A;
+      --surface: #182022;
+      --line: #2A3436;
+      --ink: #E7EDE9;
+      --muted: #8FA39C;
+      --accent: #6FBFA3;
+      --accent-strong: #9AD9C1;
+      --accent-soft: #203029;
+      --gold: #E0AC66;
+      --gold-soft: #3A2E1C;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 5rem;
+  }
+
+  header {
+    margin-bottom: 3rem;
+  }
+
+  h1 {
+    font-family: "Fraunces", ui-serif, Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(2.1rem, 5vw, 2.9rem);
+    letter-spacing: -0.01em;
+    margin: 0 0 0.5rem;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+
+  .meta {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .meta strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .note {
+    margin: 1.1rem 0 0;
+    font-size: 0.82rem;
+    color: var(--muted);
+    border-left: 2px solid var(--line);
+    padding-left: 0.7rem;
+  }
+
+  .note code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+  }
+
+  ul.roster {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  li.row {
+    display: grid;
+    grid-template-columns: 12.5rem 1fr 6.5rem;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.15rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .who {
+    min-width: 0;
+  }
+
+  .name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
+  }
+
+  .rank-tag {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: var(--gold-soft);
+    border-radius: 3px;
+    padding: 0.14rem 0.4rem;
+    white-space: nowrap;
+    flex: none;
+  }
+
+  .started {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bar-track {
+    position: relative;
+    height: 0.6rem;
+    background: var(--accent-soft);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    position: absolute;
+    inset: 0;
+    width: 0;
+    background: linear-gradient(90deg, var(--accent-strong), var(--accent));
+    border-radius: 999px;
+    transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .bar-fill.is-new {
+    background: var(--gold);
+    width: 0.6rem !important;
+  }
+
+  .duration {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .duration small {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: var(--muted);
+    margin-top: 0.1rem;
+  }
+
+  footer {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 1.5rem 3rem;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  footer a {
+    color: var(--accent-strong);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar-fill { transition: none; }
+  }
+
+  @media (max-width: 600px) {
+    li.row {
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        "who dur"
+        "bar bar";
+      row-gap: 0.6rem;
+    }
+    .who { grid-area: who; }
+    .duration { grid-area: dur; }
+    .bar-track { grid-area: bar; }
+  }
+</style>
+</head>
+<body>
+
+<main>
+  <header>
+    <h1>Tenure Roster</h1>
+    <p class="meta" id="metaLine">Loading team…</p>
+    <p class="note">Roster is hardcoded in this page — add or edit names and start dates directly in the <code>roster</code> array in <code>index.html</code>, commit, and push to update the live page.</p>
+  </header>
+
+  <ul class="roster" id="rosterList"></ul>
+</main>
+
+<script>
+  const roster = [
+    { name: "Ivan Hrynkiv",      start: "2021-10-01" },
+    { name: "Oksana Solomka",    start: "2026-09-07" },
+    { name: "Oleksii Sanin",     start: "2021-12-06" },
+    { name: "Tetiana Krupa",     start: "2021-04-16" },
+    { name: "Volodymyr Leha",    start: "2025-09-01" },
+    { name: "Viktor Barinov",    start: "2022-01-25" },
+    { name: "Halyna Hoi",        start: "2023-06-05" },
+    { name: "Julia Bilobran",    start: "2026-05-18" },
+  ];
+
+  function parseDate(iso) {
+    const [y, m, d] = iso.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function formatStart(date) {
+    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  function yearsMonthsBetween(start, end) {
+    let years = end.getFullYear() - start.getFullYear();
+    let months = end.getMonth() - start.getMonth();
+    let days = end.getDate() - start.getDate();
+    if (days < 0) months -= 1;
+    if (months < 0) { years -= 1; months += 12; }
+    return { years, months };
+  }
+
+  function durationLabel(start, end, totalDays) {
+    if (totalDays <= 0) return { main: "New", sub: "starts today" };
+    if (totalDays < 30) return { main: `${totalDays}d`, sub: "day" + (totalDays === 1 ? "" : "s") };
+    const { years, months } = yearsMonthsBetween(start, end);
+    if (years <= 0) return { main: `${months}mo`, sub: "month" + (months === 1 ? "" : "s") };
+    const parts = [`${years}y`];
+    if (months > 0) parts.push(`${months}mo`);
+    return { main: parts.join(" "), sub: "on the team" };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const withDays = roster.map(p => {
+    const start = parseDate(p.start);
+    const totalDays = Math.round((today - start) / 86400000);
+    return { ...p, startDate: start, totalDays };
+  });
+
+  withDays.sort((a, b) => a.totalDays === b.totalDays ? a.name.localeCompare(b.name) : b.totalDays - a.totalDays);
+
+  const maxDays = Math.max(...withDays.map(p => p.totalDays), 1);
+
+  const metaLine = document.getElementById("metaLine");
+  metaLine.innerHTML = `<strong>${withDays.length} teammates</strong> · sorted by time on the project, longest first · as of ${formatStart(today)}`;
+
+  const list = document.getElementById("rosterList");
+  withDays.forEach((p, i) => {
+    const li = document.createElement("li");
+    li.className = "row";
+
+    const pct = p.totalDays <= 0 ? 0 : Math.max((p.totalDays / maxDays) * 100, 3);
+    const label = durationLabel(p.startDate, today, p.totalDays);
+    const isLongest = i === 0 && p.totalDays > 0;
+
+    li.innerHTML = `
+      <div class="who">
+        <div class="name">${p.name}${isLongest ? '<span class="rank-tag">Longest-serving</span>' : ""}</div>
+        <div class="started">since ${formatStart(p.startDate)}</div>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill${p.totalDays <= 0 ? " is-new" : ""}" style="width:0%" data-pct="${pct}"></div>
+      </div>
+      <div class="duration">${label.main}<small>${label.sub}</small></div>
+    `;
+    list.appendChild(li);
+  });
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.querySelectorAll(".bar-fill:not(.is-new)").forEach(el => {
+        el.style.width = el.dataset.pct + "%";
+      });
+    });
+  });
+</script>
+</body>
+</html>
