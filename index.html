@@ -104,7 +104,7 @@
 
   li.row {
     display: grid;
-    grid-template-columns: 12.5rem 1fr 6.5rem;
+    grid-template-columns: 11.5rem 1fr 9rem;
     align-items: center;
     gap: 1.25rem;
     padding: 1.15rem 0;
@@ -173,7 +173,7 @@
 
   .duration {
     font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 500;
     text-align: right;
     font-variant-numeric: tabular-nums;
@@ -252,23 +252,26 @@
     return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
   }
 
-  function yearsMonthsBetween(start, end) {
+  function yearsMonthsDaysBetween(start, end) {
     let years = end.getFullYear() - start.getFullYear();
     let months = end.getMonth() - start.getMonth();
     let days = end.getDate() - start.getDate();
-    if (days < 0) months -= 1;
+    if (days < 0) {
+      months -= 1;
+      days += new Date(end.getFullYear(), end.getMonth(), 0).getDate();
+    }
     if (months < 0) { years -= 1; months += 12; }
-    return { years, months };
+    return { years, months, days };
   }
 
   function durationLabel(start, end, totalDays) {
     if (totalDays <= 0) return { main: "New", sub: "starts today" };
-    if (totalDays < 30) return { main: `${totalDays}d`, sub: "day" + (totalDays === 1 ? "" : "s") };
-    const { years, months } = yearsMonthsBetween(start, end);
-    if (years <= 0) return { main: `${months}mo`, sub: "month" + (months === 1 ? "" : "s") };
-    const parts = [`${years}y`];
+    const { years, months, days } = yearsMonthsDaysBetween(start, end);
+    const parts = [];
+    if (years > 0) parts.push(`${years}y`);
     if (months > 0) parts.push(`${months}mo`);
-    return { main: parts.join(" "), sub: "on the team" };
+    if (days > 0) parts.push(`${days}d`);
+    return { main: parts.join(" "), sub: "" };
   }
 
   const today = new Date();
@@ -304,7 +307,7 @@
       <div class="bar-track">
         <div class="bar-fill${p.totalDays <= 0 ? " is-new" : ""}" style="width:0%" data-pct="${pct}"></div>
       </div>
-      <div class="duration">${label.main}<small>${label.sub}</small></div>
+      <div class="duration">${label.main}${label.sub ? `<small>${label.sub}</small>` : ""}</div>
     `;
     list.appendChild(li);
   });
